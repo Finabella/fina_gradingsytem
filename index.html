@@ -188,6 +188,7 @@
         if (authMode === 'register') {
             const result = registerUser(username, password);
             if (result.success) {
+                authError.className = 'success-msg';
                 authError.innerText = 'Registration successful! Please login.';
                 authMode = 'login';
                 authTitle.innerText = ' Login';
