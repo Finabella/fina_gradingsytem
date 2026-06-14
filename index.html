@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>AutoGrade Pro  MCQ Assessment with Login & Results</title>
+    <title>AutoGrade Pro  MCQ Assessment </title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,7 +25,7 @@
         <div class="header">
             <div class="title">
                 <h1> AutoGrade Pro · MCQ System</h1>
-                <p>Upload answer sheets | Auto-grading | Download results</p>
+                <p>Upload answer sheets, Auto-grading, Download results</p>
             </div>
             <div style="display: flex; gap: 1rem; align-items: center;">
                 <div class="stats-panel">
@@ -42,11 +42,11 @@
         <div class="two-columns">
             <!-- LEFT PANEL -->
             <div class="card">
-                <div class="card-header"><span>📂</span> Data & Answer Key</div>
+                <div class="card-header"><span></span> Data & Answer Key</div>
                 <div class="upload-zone" id="uploadZone">
                     <div class="upload-icon"></div>
                     <div>Upload student answer sheets (CSV/JSON)</div>
-                    <button class="btn btn-secondary" id="uploadBtnTrigger" style="margin-top:8px;">Choose file</button>
+                    <button class="btn btn-secondary" id="uploadBtnTrigger" style="margin-top:8px;">📂Choose file</button>
                     <input type="file" id="realFileInput" accept=".csv,.json" class="file-input-hidden">
                     <div id="fileStatus" style="font-size:0.7rem; margin-top:6px; color:#2d6a4f;"></div>
                 </div>
@@ -332,7 +332,7 @@
         const avg = percentages.reduce((a,b)=>a+b,0)/percentages.length;
         const highest = Math.max(...percentages);
         const lowest = Math.min(...percentages);
-        summaryStatsDiv.innerHTML = `<div style="background:#eef3fc; border-radius:1rem; padding:0.7rem; margin-top:0.8rem; display:flex; justify-content:space-between; flex-wrap:wrap;"><span>📊 Avg: <strong>${avg.toFixed(1)}%</strong></span><span>🏆 Highest: ${highest.toFixed(1)}%</span><span>📉 Lowest: ${lowest.toFixed(1)}%</span></div>`;
+        summaryStatsDiv.innerHTML = `<div style="background:#eef3fc; border-radius:1rem; padding:0.7rem; margin-top:0.8rem; display:flex; justify-content:space-between; flex-wrap:wrap;"><span> Avg: <strong>${avg.toFixed(1)}%</strong></span><span> Highest: ${highest.toFixed(1)}%</span><span> Lowest: ${lowest.toFixed(1)}%</span></div>`;
         const weak = [];
         const qStats = Array(totalQuestions).fill().map(()=>({correct:0,total:0}));
         grades.forEach(g => g.details.forEach((d,i) => { qStats[i].total++; if(d.isCorrect) qStats[i].correct++; }));
