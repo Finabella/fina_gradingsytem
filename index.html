@@ -3,101 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title> MCQ Assessment System</title>
- <link rel="stylesheet" href="styles.css">
+    <title>AutoGrade Pro  MCQ Assessment with Login & Results</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="app-container">
-    <div class="header">
-        <div class="title">
-            <h1> MCQ System</h1>
-            <p>Upload  answer sheets, Set answer key , Instant grading & feedback</p>
-        </div>
-        <div class="stats-panel" id="liveStatsPanel">
-            <div class="stat-item"><span class="stat-number" id="studentCount">0</span><br>Students</div>
-            <div class="stat-item"><span class="stat-number" id="avgScoreDisplay">—</span><br>Avg %</div>
+<div class="app-container" id="appContainer">
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal-overlay">
+        <div class="modal">
+            <h2 id="authTitle">Login</h2>
+            <input type="text" id="authUsername" placeholder="Username" autocomplete="off">
+            <input type="password" id="authPassword" placeholder="Password">
+            <div id="authError" class="error-msg"></div>
+            <button id="authSubmitBtn" class="btn btn-primary">Login</button>
+            <div class="auth-switch" id="authSwitch">Don't have an account? <span>Register</span></div>
         </div>
     </div>
 
-    <div class="two-columns">
-        <!-- LEFT: Data Upload & Answer Key Management -->
-        <div class="card">
-            <div class="card-header">
-                <span></span> 1. Upload Data & Set Key
+    <!-- Main App (hidden until auth) -->
+    <div id="mainApp" class="hidden">
+        <div class="header">
+            <div class="title">
+                <h1> AutoGrade Pro · MCQ System</h1>
+                <p>Upload answer sheets | Auto-grading | Download results</p>
             </div>
-
-            <!-- Real file upload section - no dummy data -->
-            <div class="upload-zone" id="uploadZone">
-                <div class="upload-icon"></div>
-                <div style="font-weight: 500;">Upload student answer sheets</div>
-                <div style="font-size: 0.7rem; margin: 5px 0;">CSV or JSON format</div>
-                <button class="btn btn-secondary" id="uploadBtnTrigger" style="margin-top: 8px;">📁 Choose file</button>
-                <input type="file" id="realFileInput" accept=".csv,.json" class="file-input-hidden">
-                <div id="fileStatus" class="file-status"></div>
-            </div>
-
-            <!-- Format hints -->
-            <div class="insight-card" style="background:#f9fbfe; margin-bottom:1rem;">
-                <div style="font-weight:600; font-size:0.8rem;"> Required Format</div>
-                <div style="font-size:0.75rem; margin-top:6px;">
-                    <strong>CSV:</strong> columns "roll" and "answers" (answers like "A,B,C,D" or "A;B;C")<br>
-                    <strong>JSON:</strong> array of objects { "roll": "ID", "answers": ["A","B","C"] }
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div class="stats-panel">
+                    <div><span class="stat-number" id="studentCount">0</span><br>Students</div>
+                    <div><span class="stat-number" id="avgScoreDisplay">—</span><br>Avg %</div>
                 </div>
-            </div>
-
-            <!-- Answer Key Builder -->
-            <div class="key-editor-panel">
-                <div style="font-weight: 600; margin-bottom: 8px;"> 2. Define Correct Answer Key (A–D)</div>
-                <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-                    <label style="font-size:0.8rem;"># Questions:</label>
-                    <input type="number" id="totalQuestionsInput" min="1" max="60" value="5" style="width: 70px; padding: 0.3rem; border-radius: 30px; border:1px solid #cbd5e1; text-align: center;">
-                    <button id="resizeQuestionsBtn" class="btn btn-secondary" style="padding: 0.3rem 1rem;">Set</button>
+                <div class="user-info">
+                    <span>👤 <span id="currentUserSpan">User</span></span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
                 </div>
-                <div id="answerKeyBubbles" class="q-bubbles">
-                    <!-- dynamic answer inputs -->
-                </div>
-                <div class="action-buttons">
-                    <button id="applyKeyAndGradeBtn" class="btn btn-primary"> Apply Key & Grade All</button>
-                    <button id="resetDefaultKeyBtn" class="btn btn-secondary">⟳ Reset Key to ABCD...</button>
-                </div>
-                <div id="keyPreviewText" class="key-preview" style="margin-top: 10px;"></div>
-            </div>
-            <div class="insight-card">
-                <div style="font-weight: 600;"> Workflow</div>
-                <div style="font-size: 0.8rem;">1. Upload student responses (real data)<br>2. Adjust number of questions & set correct answers<br>3. Click "Apply Key & Grade" → instant report</div>
             </div>
         </div>
 
-        <!-- RIGHT: Grading Report & Feedback -->
-        <div class="card">
-            <div class="card-header">
-                <span></span> 3. Grading Report
-            </div>
-            <div id="studentGradeContainer">
-                <div class="empty-state">
-                     No student data uploaded.<br>Please upload a CSV/JSON file with  student responses.
+        <div class="two-columns">
+            <!-- LEFT PANEL -->
+            <div class="card">
+                <div class="card-header"><span>📂</span> Data & Answer Key</div>
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon"></div>
+                    <div>Upload student answer sheets (CSV/JSON)</div>
+                    <button class="btn btn-secondary" id="uploadBtnTrigger" style="margin-top:8px;">Choose file</button>
+                    <input type="file" id="realFileInput" accept=".csv,.json" class="file-input-hidden">
+                    <div id="fileStatus" style="font-size:0.7rem; margin-top:6px; color:#2d6a4f;"></div>
+                </div>
+                <div style="background:#f9fbfe; border-radius:1rem; padding:0.8rem; margin:0.5rem 0;">
+                    <div style="font-weight:600; font-size:0.8rem;">📌 Format:</div>
+                    <div style="font-size:0.7rem;">CSV: "roll,answers" (answers: "A,B,C,D")<br>JSON: [{"roll":"ID","answers":["A","B"]}]</div>
+                </div>
+                <div class="key-editor-panel">
+                    <div style="font-weight:600;"> Answer Key (A–D)</div>
+                    <div style="display:flex; gap:0.5rem; margin:0.5rem 0; flex-wrap:wrap;">
+                        <label>#Questions:</label>
+                        <input type="number" id="totalQuestionsInput" min="1" max="50" value="5" style="width:70px;">
+                        <button id="resizeQuestionsBtn" class="btn btn-secondary">Set</button>
+                    </div>
+                    <div id="answerKeyBubbles" class="q-bubbles"></div>
+                    <div class="action-group">
+                        <button id="applyKeyBtn" class="btn btn-primary"> Apply Key & Grade</button>
+                        <button id="resetKeyBtn" class="btn btn-secondary">⟳ Reset Key</button>
+                    </div>
+                    <div id="keyPreview" style="font-size:0.7rem; margin-top:8px; text-align:center;"></div>
                 </div>
             </div>
-            <div id="summaryStats"></div>
-            <div id="dynamicFeedback" class="feedback-area">
-                 Waiting for data — upload student answers and set answer key to see automatic evaluation.
+
+            <!-- RIGHT PANEL: Results & Download -->
+            <div class="card">
+                <div class="card-header"><span></span> Grading Report</div>
+                <div id="studentGradeContainer">
+                    <div class="empty-state"> No data. Upload a file and set answer key.</div>
+                </div>
+                <div id="summaryStats"></div>
+                <div class="action-group" style="justify-content: flex-end;">
+                    <button id="downloadCSVBtn" class="btn btn-success"> Download Results (CSV)</button>
+                    <button id="downloadJSONBtn" class="btn btn-secondary"> Download Results (JSON)</button>
+                </div>
+                <div id="dynamicFeedback" class="feedback-area">
+                     Login to access. Upload student responses, set answer key, then download grades.
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // ---------- STATE (no dummy data) ----------
-    let studentsData = [];       // { roll, answers: ['A','B',...] }
-    let currentAnswerKey = [];   
-    let totalQuestions = 5;      
+    // ---------- AUTH SYSTEM (localStorage) ----------
+    let currentUser = null;
+    const USERS_KEY = 'mcq_users';
+
+    function loadUsers() {
+        const users = localStorage.getItem(USERS_KEY);
+        if (!users) {
+            // create default demo user
+            const defaultUsers = [{ username: 'teacher', password: 'admin123' }];
+            localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+            return defaultUsers;
+        }
+        return JSON.parse(users);
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    }
+
+    function registerUser(username, password) {
+        const users = loadUsers();
+        if (users.find(u => u.username === username)) return { success: false, error: 'Username already exists' };
+        users.push({ username, password });
+        saveUsers(users);
+        return { success: true };
+    }
+
+    function loginUser(username, password) {
+        const users = loadUsers();
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) return { success: true };
+        return { success: false, error: 'Invalid credentials' };
+    }
+
+    // ---------- MCQ APP STATE ----------
+    let studentsData = [];      // { roll, answers: [] }
+    let currentAnswerKey = [];
+    let totalQuestions = 5;
+    let currentGrades = [];     // cached grades for download
 
     // DOM elements
+    const authModal = document.getElementById('authModal');
+    const mainApp = document.getElementById('mainApp');
+    const authTitle = document.getElementById('authTitle');
+    const authUsername = document.getElementById('authUsername');
+    const authPassword = document.getElementById('authPassword');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authSwitch = document.getElementById('authSwitch');
+    const authError = document.getElementById('authError');
+    const currentUserSpan = document.getElementById('currentUserSpan');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // app controls
     const totalQuestionsInput = document.getElementById('totalQuestionsInput');
     const resizeBtn = document.getElementById('resizeQuestionsBtn');
     const answerKeyBubblesDiv = document.getElementById('answerKeyBubbles');
-    const applyKeyBtn = document.getElementById('applyKeyAndGradeBtn');
-    const resetDefaultKeyBtn = document.getElementById('resetDefaultKeyBtn');
+    const applyKeyBtn = document.getElementById('applyKeyBtn');
+    const resetKeyBtn = document.getElementById('resetKeyBtn');
     const studentGradeContainer = document.getElementById('studentGradeContainer');
     const summaryStatsDiv = document.getElementById('summaryStats');
     const dynamicFeedbackDiv = document.getElementById('dynamicFeedback');
@@ -106,19 +156,92 @@
     const fileStatusSpan = document.getElementById('fileStatus');
     const studentCountSpan = document.getElementById('studentCount');
     const avgScoreDisplaySpan = document.getElementById('avgScoreDisplay');
-    const keyPreviewText = document.getElementById('keyPreviewText');
+    const keyPreview = document.getElementById('keyPreview');
+    const downloadCSVBtn = document.getElementById('downloadCSVBtn');
+    const downloadJSONBtn = document.getElementById('downloadJSONBtn');
 
-    // Helper: rebuild answer key UI
+    let authMode = 'login'; // 'login' or 'register'
+
+    function switchAuthMode() {
+        if (authMode === 'login') {
+            authMode = 'register';
+            authTitle.innerText = ' Register';
+            authSubmitBtn.innerText = 'Register';
+            authSwitch.innerHTML = 'Already have an account? <span>Login</span>';
+            authError.innerText = '';
+        } else {
+            authMode = 'login';
+            authTitle.innerText = ' Login';
+            authSubmitBtn.innerText = 'Login';
+            authSwitch.innerHTML = 'Don\'t have an account? <span>Register</span>';
+            authError.innerText = '';
+        }
+    }
+
+    function handleAuth() {
+        const username = authUsername.value.trim();
+        const password = authPassword.value.trim();
+        if (!username || !password) {
+            authError.innerText = 'Please fill all fields';
+            return;
+        }
+        if (authMode === 'register') {
+            const result = registerUser(username, password);
+            if (result.success) {
+                authError.innerText = 'Registration successful! Please login.';
+                authMode = 'login';
+                authTitle.innerText = ' Login';
+                authSubmitBtn.innerText = 'Login';
+                authSwitch.innerHTML = 'Don\'t have an account? <span>Register</span>';
+                authUsername.value = '';
+                authPassword.value = '';
+            } else {
+                authError.innerText = result.error;
+            }
+        } else {
+            const result = loginUser(username, password);
+            if (result.success) {
+                currentUser = username;
+                localStorage.setItem('mcq_current_user', username);
+                authModal.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                currentUserSpan.innerText = username;
+                initAppState();
+            } else {
+                authError.innerText = result.error;
+            }
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('mcq_current_user');
+        authModal.classList.remove('hidden');
+        mainApp.classList.add('hidden');
+        authUsername.value = '';
+        authPassword.value = '';
+        authMode = 'login';
+        authTitle.innerText = 'Login';
+        authSubmitBtn.innerText = 'Login';
+        authSwitch.innerHTML = 'Don\'t have an account? <span>Register</span>';
+        authError.innerText = '';
+        // reset app data
+        studentsData = [];
+        currentAnswerKey = [];
+        totalQuestions = 5;
+        totalQuestionsInput.value = 5;
+        renderEmptyState();
+        rebuildAnswerKeyUI();
+    }
+
+    // ---------- MCQ FUNCTIONS ----------
     function rebuildAnswerKeyUI() {
         answerKeyBubblesDiv.innerHTML = '';
         for (let i = 0; i < totalQuestions; i++) {
             const val = (currentAnswerKey[i] && currentAnswerKey[i] !== '?') ? currentAnswerKey[i] : 'A';
             const bubble = document.createElement('div');
             bubble.className = 'key-bubble';
-            bubble.innerHTML = `
-                <span>Q${i+1}</span>
-                <input type="text" id="keyInput_${i}" maxlength="1" value="${val}" placeholder="A-D">
-            `;
+            bubble.innerHTML = `<span>Q${i+1}</span><input type="text" id="keyInput_${i}" maxlength="1" value="${val}">`;
             answerKeyBubblesDiv.appendChild(bubble);
         }
         syncKeyFromUI();
@@ -131,307 +254,222 @@
             const input = document.getElementById(`keyInput_${i}`);
             if (input) {
                 let val = input.value.trim().toUpperCase();
-                if (val === '' || !['A','B','C','D'].includes(val)) val = 'A';
+                if (!['A','B','C','D'].includes(val)) val = 'A';
                 newKey.push(val);
-            } else {
-                newKey.push('A');
-            }
+            } else newKey.push('A');
         }
         currentAnswerKey = newKey;
         updateKeyPreview();
     }
 
     function updateKeyPreview() {
-        if (currentAnswerKey.length === 0) keyPreviewText.innerText = ' No key defined';
-        else keyPreviewText.innerText = ` Current Key: ${currentAnswerKey.map((k,i)=>`Q${i+1}:${k}`).join(' · ')}`;
+        if (currentAnswerKey.length) keyPreview.innerText = ` Key: ${currentAnswerKey.map((k,i)=>`Q${i+1}:${k}`).join(' · ')}`;
+        else keyPreview.innerText = ' No key set';
     }
 
-    // default alternating key
     function setDefaultKey() {
-        const defaultKeys = [];
-        for (let i = 0; i < totalQuestions; i++) {
-            const letters = ['A','B','C','D'];
-            defaultKeys.push(letters[i % 4]);
-        }
-        currentAnswerKey = defaultKeys;
+        const letters = ['A','B','C','D'];
+        currentAnswerKey = Array(totalQuestions).fill().map((_,i) => letters[i % 4]);
         rebuildAnswerKeyUI();
-        if (studentsData.length > 0) computeAndRenderFullReport();
-        else renderEmptyState(true);
+        if (studentsData.length) computeAndRenderFullReport();
     }
 
-    // resize total questions (preserve existing data where possible)
     function resizeQuestions(newTotal) {
         if (newTotal < 1) newTotal = 1;
-        if (newTotal > 60) newTotal = 60;
         totalQuestions = newTotal;
         totalQuestionsInput.value = totalQuestions;
-
-        // Resize answer key
         const newKey = [];
         for (let i = 0; i < totalQuestions; i++) {
             if (i < currentAnswerKey.length) newKey.push(currentAnswerKey[i]);
             else newKey.push(['A','B','C','D'][i % 4]);
         }
         currentAnswerKey = newKey;
-
-        // Resize each student's answers (pad with '?' or trim)
-        if (studentsData.length > 0) {
-            studentsData = studentsData.map(student => {
-                let newAnswers = [...student.answers];
-                if (newAnswers.length > totalQuestions) newAnswers = newAnswers.slice(0, totalQuestions);
-                while (newAnswers.length < totalQuestions) newAnswers.push('?');
-                return { roll: student.roll, answers: newAnswers };
+        if (studentsData.length) {
+            studentsData = studentsData.map(s => {
+                let ans = [...s.answers];
+                if (ans.length > totalQuestions) ans = ans.slice(0,totalQuestions);
+                while (ans.length < totalQuestions) ans.push('?');
+                return { roll: s.roll, answers: ans };
             });
         }
         rebuildAnswerKeyUI();
-        if (studentsData.length > 0) computeAndRenderFullReport();
-        else renderEmptyState(true);
+        if (studentsData.length) computeAndRenderFullReport();
+        else renderEmptyState();
         updateLiveStats();
     }
 
-    // compute grades for all students
     function computeFullGrades() {
         if (!studentsData.length || !currentAnswerKey.length) return [];
         const results = studentsData.map(student => {
-            let correctCount = 0;
+            let correct = 0;
             const details = [];
             for (let i = 0; i < totalQuestions; i++) {
                 const correctAns = currentAnswerKey[i] || '?';
                 const studentAns = (student.answers[i] || '?').toUpperCase();
                 const isCorrect = (correctAns !== '?' && studentAns === correctAns);
-                if (isCorrect) correctCount++;
-                details.push({
-                    qNo: i+1,
-                    studentAns: studentAns,
-                    correctAns: correctAns,
-                    isCorrect: isCorrect
-                });
+                if (isCorrect) correct++;
+                details.push({ qNo: i+1, studentAns, correctAns, isCorrect });
             }
-            const percent = (correctCount / totalQuestions) * 100;
-            return {
-                roll: student.roll,
-                score: correctCount,
-                total: totalQuestions,
-                percentage: percent.toFixed(1),
-                details
-            };
+            const percent = (correct / totalQuestions) * 100;
+            return { roll: student.roll, score: correct, total: totalQuestions, percentage: percent.toFixed(1), details };
         });
+        currentGrades = results;
         return results;
     }
 
-    // render full report
     function computeAndRenderFullReport() {
-        if (!studentsData.length) {
-            renderEmptyState(true);
-            return;
-        }
-        if (!currentAnswerKey.length || currentAnswerKey.length !== totalQuestions) {
-            setDefaultKey();
-        }
+        if (!studentsData.length) { renderEmptyState(); return; }
         const grades = computeFullGrades();
         if (!grades.length) return;
-
-        // Build table
-        let tableHtml = `<div class="table-wrapper"><table class="grade-table"><thead><tr>
-            <th>Roll No.</th><th>Score</th><th>%</th><th>Per-Question Analysis</th>
-        </tr></thead><tbody>`;
+        let tableHtml = `<div class="table-wrapper"><table class="grade-table"><thead><tr><th>Roll</th><th>Score</th><th>%</th><th>Analysis</th></tr></thead><tbody>`;
         grades.forEach(g => {
-            const badgesHtml = g.details.map(d => {
-                if (d.isCorrect) return `<span class="correct-chip" title="Correct: ${d.correctAns}">✓ Q${d.qNo}:${d.studentAns}</span>`;
-                else return `<span class="wrong-chip" title="Correct: ${d.correctAns}">✗ Q${d.qNo}:${d.studentAns}</span>`;
-            }).join(' ');
-            tableHtml += `<tr>
-                <td style="font-weight:500;">${escapeHtml(g.roll)}</td>
-                <td><span class="score-badge">${g.score}/${g.total}</span></td>
-                <td><strong>${g.percentage}%</strong></td>
-                <td style="max-width: 300px;">${badgesHtml}</td>
-            </tr>`;
+            const badges = g.details.map(d => d.isCorrect ? `<span class="correct-chip">✓ Q${d.qNo}:${d.studentAns}</span>` : `<span class="wrong-chip">✗ Q${d.qNo}:${d.studentAns}</span>`).join('');
+            tableHtml += `<tr><td>${escapeHtml(g.roll)}</td><td>${g.score}/${g.total}</td><td><strong>${g.percentage}%</strong></td><td>${badges}</td></tr>`;
         });
         tableHtml += `</tbody></table></div>`;
         studentGradeContainer.innerHTML = tableHtml;
-
-        // Stats
         const percentages = grades.map(g => parseFloat(g.percentage));
         const avg = percentages.reduce((a,b)=>a+b,0)/percentages.length;
         const highest = Math.max(...percentages);
         const lowest = Math.min(...percentages);
-        const passCount = grades.filter(g => parseFloat(g.percentage) >= 50).length;
-
-        summaryStatsDiv.innerHTML = `
-            <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; background: #eef3fc; border-radius: 1.2rem; padding: 0.8rem 1rem; margin-top: 1rem;">
-                <div> Class Average: <strong>${avg.toFixed(1)}%</strong></div>
-                <div> Highest: ${highest.toFixed(1)}% &nbsp;|&nbsp;  Lowest: ${lowest.toFixed(1)}%</div>
-                <div> Pass Rate (>50%): ${passCount}/${grades.length}</div>
-            </div>
-        `;
-
-        // Question-level weakness analysis
-        const questionStats = Array(totalQuestions).fill().map(() => ({ correct: 0, total: 0 }));
-        grades.forEach(grade => {
-            grade.details.forEach((det, idx) => {
-                questionStats[idx].total++;
-                if (det.isCorrect) questionStats[idx].correct++;
-            });
-        });
-        const weakQuestions = [];
-        questionStats.forEach((stat, idx) => {
-            if (stat.total > 0) {
-                const accuracy = (stat.correct / stat.total) * 100;
-                if (accuracy < 50) weakQuestions.push(`Q${idx+1} (${accuracy.toFixed(0)}% correct)`);
-            }
-        });
-        let feedbackMsg = ` Real-time Insight: `;
-        if (weakQuestions.length > 0) {
-            feedbackMsg += `Students struggled most with ${weakQuestions.join(', ')}. Consider reviewing those topics. `;
-        } else if (avg > 75) {
-            feedbackMsg += `Excellent performance! Strong mastery across all questions. `;
-        } else {
-            feedbackMsg += `Moderate performance. Focus on weaker areas and reinforce concepts. `;
-        }
-        feedbackMsg += ` Current answer key: ${currentAnswerKey.join(', ')}. You can edit the key and re-apply.`;
-        dynamicFeedbackDiv.innerHTML = ` ${feedbackMsg}`;
+        summaryStatsDiv.innerHTML = `<div style="background:#eef3fc; border-radius:1rem; padding:0.7rem; margin-top:0.8rem; display:flex; justify-content:space-between; flex-wrap:wrap;"><span>📊 Avg: <strong>${avg.toFixed(1)}%</strong></span><span>🏆 Highest: ${highest.toFixed(1)}%</span><span>📉 Lowest: ${lowest.toFixed(1)}%</span></div>`;
+        const weak = [];
+        const qStats = Array(totalQuestions).fill().map(()=>({correct:0,total:0}));
+        grades.forEach(g => g.details.forEach((d,i) => { qStats[i].total++; if(d.isCorrect) qStats[i].correct++; }));
+        qStats.forEach((s,i) => { if(s.total>0 && (s.correct/s.total)*100<50) weak.push(`Q${i+1}`); });
+        let feedback = weak.length ? ` Weak areas: ${weak.join(', ')}. Review these questions.` : ` Great performance! Key aligns well.`;
+        dynamicFeedbackDiv.innerHTML = ` ${feedback} Current key: ${currentAnswerKey.join(',')}`;
         updateLiveStats(grades.length, avg);
     }
 
-    function updateLiveStats(studentLen = null, average = null) {
-        if (studentLen === null) studentLen = studentsData.length;
-        studentCountSpan.innerText = studentLen;
-        if (average !== null) {
-            avgScoreDisplaySpan.innerText = average.toFixed(1) + '%';
-        } else if (studentsData.length > 0) {
-            const grades = computeFullGrades();
-            if (grades.length) {
-                const avgPer = grades.reduce((a,b)=>a+parseFloat(b.percentage),0)/grades.length;
-                avgScoreDisplaySpan.innerText = avgPer.toFixed(1) + '%';
-            } else avgScoreDisplaySpan.innerText = '—';
-        } else {
-            avgScoreDisplaySpan.innerText = '—';
-        }
+    function updateLiveStats(len=null, avg=null) {
+        if(len!==null) studentCountSpan.innerText = len;
+        else studentCountSpan.innerText = studentsData.length;
+        if(avg!==null) avgScoreDisplaySpan.innerText = avg.toFixed(1)+'%';
+        else if(studentsData.length){ const g = computeFullGrades(); if(g.length){ const a = g.reduce((s,gr)=>s+parseFloat(gr.percentage),0)/g.length; avgScoreDisplaySpan.innerText = a.toFixed(1)+'%'; } else avgScoreDisplaySpan.innerText='—';}
+        else avgScoreDisplaySpan.innerText='—';
     }
 
-    function renderEmptyState(preserveKey = false) {
-        studentGradeContainer.innerHTML = `<div class="empty-state"> No student data. Please upload a CSV or JSON file with  student responses.</div>`;
+    function renderEmptyState() {
+        studentGradeContainer.innerHTML = `<div class="empty-state"> No student data. Upload CSV/JSON.</div>`;
         summaryStatsDiv.innerHTML = '';
-        if (!preserveKey) {
-            dynamicFeedbackDiv.innerHTML = ' Upload a file with student answers, then configure the answer key and click "Apply Key & Grade".';
-        } else {
-            dynamicFeedbackDiv.innerHTML = ' Student data loaded. Adjust answer key if needed and click "Apply Key & Grade" to generate report.';
-        }
-        updateLiveStats(0, null);
+        dynamicFeedbackDiv.innerHTML = ' Upload responses, set answer key, then apply grading.';
+        updateLiveStats();
     }
 
-    // Parse uploaded file (real data only)
     function parseUploadedFile(content, filename) {
         try {
-            let parsedStudents = [];
+            let parsed = [];
             const ext = filename.split('.').pop().toLowerCase();
-            if (ext === 'json') {
+            if(ext === 'json'){
                 const data = JSON.parse(content);
-                if (!Array.isArray(data)) throw new Error('JSON must be an array of student objects');
-                parsedStudents = data.map(item => {
-                    let roll = item.roll || item.studentId || item.id || 'unknown';
-                    let answersRaw = item.answers || item.responses || [];
-                    let answersArr = [];
-                    if (Array.isArray(answersRaw)) answersArr = answersRaw.map(a => a.toString().trim().toUpperCase());
-                    else if (typeof answersRaw === 'string') {
-                        answersArr = answersRaw.split(/[,;]/).map(a => a.trim().toUpperCase());
-                    }
-                    return { roll: String(roll), answers: answersArr };
-                });
-            } 
-            else if (ext === 'csv') {
-                const lines = content.split(/\r?\n/).filter(l => l.trim().length > 0);
-                if (lines.length < 2) throw new Error('CSV needs header row + at least one data row');
-                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-                const rollIdx = headers.findIndex(h => h.includes('roll') || h === 'id' || h === 'student');
-                const ansIdx = headers.findIndex(h => h.includes('answer') || h === 'responses' || h === 'answers');
-                if (rollIdx === -1 || ansIdx === -1) throw new Error('CSV must have Roll/ID column and Answers column');
-                for (let i=1; i<lines.length; i++) {
-                    const cols = lines[i].split(',').map(c => c.trim());
-                    if (cols.length < 2) continue;
-                    let rollVal = cols[rollIdx] || `S${i}`;
+                if(!Array.isArray(data)) throw new Error('JSON must be array');
+                parsed = data.map(item => ({ roll: item.roll || item.id || 'unknown', answers: Array.isArray(item.answers) ? item.answers.map(a=>a.toUpperCase()) : (item.answers || '').split(/[,;]/).map(a=>a.trim().toUpperCase()) }));
+            } else if(ext === 'csv'){
+                const lines = content.split(/\r?\n/).filter(l=>l.trim());
+                if(lines.length<2) throw new Error('CSV needs header');
+                const headers = lines[0].split(',').map(h=>h.trim().toLowerCase());
+                const rollIdx = headers.findIndex(h=>h.includes('roll')||h==='id');
+                const ansIdx = headers.findIndex(h=>h.includes('answer'));
+                if(rollIdx===-1 || ansIdx===-1) throw new Error('CSV needs roll and answers columns');
+                for(let i=1;i<lines.length;i++){
+                    const cols = lines[i].split(',').map(c=>c.trim());
+                    if(cols.length<2) continue;
+                    let roll = cols[rollIdx] || `S${i}`;
                     let answersStr = cols[ansIdx] || '';
-                    let answersArr = answersStr.split(/[,;]/).map(a => a.trim().toUpperCase());
-                    parsedStudents.push({ roll: rollVal, answers: answersArr });
+                    let answers = answersStr.split(/[,;]/).map(a=>a.trim().toUpperCase());
+                    parsed.push({ roll, answers });
                 }
-            } else throw new Error('Unsupported file type. Use .csv or .json');
-
-            if (parsedStudents.length === 0) throw new Error('No valid student records found in file');
-            
-            // normalize answers length to current totalQuestions
-            parsedStudents = parsedStudents.map(s => {
-                let ans = s.answers.slice(0, totalQuestions);
-                while (ans.length < totalQuestions) ans.push('?');
+            } else throw new Error('Unsupported');
+            if(!parsed.length) throw new Error('No valid records');
+            parsed = parsed.map(s => {
+                let ans = s.answers.slice(0,totalQuestions);
+                while(ans.length<totalQuestions) ans.push('?');
                 return { roll: s.roll, answers: ans };
             });
-            studentsData = parsedStudents;
-            fileStatusSpan.innerHTML = ` Loaded ${studentsData.length} student(s) from "${filename}" — ready for grading.`;
-            // auto-render report with current key
+            studentsData = parsed;
+            fileStatusSpan.innerHTML = ` Loaded ${studentsData.length} student(s)`;
             computeAndRenderFullReport();
-        } catch (err) {
-            fileStatusSpan.innerHTML = ` Error: ${err.message}`;
-            studentGradeContainer.innerHTML = `<div class="empty-state error-message" style="background:#fee2e2;"> ${escapeHtml(err.message)}</div>`;
-            studentsData = [];
-            renderEmptyState(false);
+        } catch(err){
+            fileStatusSpan.innerHTML = ` ${err.message}`;
+            studentsData = []; renderEmptyState();
         }
     }
 
-    function handleFile(file) {
-        if (!file) return;
+    function handleFile(file){
+        if(!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => parseUploadedFile(e.target.result, file.name);
-        reader.onerror = () => fileStatusSpan.innerHTML = ` File read error`;
+        reader.onload = e => parseUploadedFile(e.target.result, file.name);
+        reader.onerror = () => fileStatusSpan.innerHTML = 'File read error';
         reader.readAsText(file);
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
-    // --- Event Listeners ---
-    uploadBtnTrigger.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length) handleFile(e.target.files[0]);
-        fileInput.value = '';
-    });
-    resizeBtn.addEventListener('click', () => {
-        let newNum = parseInt(totalQuestionsInput.value, 10);
-        if (isNaN(newNum)) newNum = totalQuestions;
-        resizeQuestions(newNum);
-    });
-    applyKeyBtn.addEventListener('click', () => {
-        syncKeyFromUI();
-        if (studentsData.length === 0) {
-            studentGradeContainer.innerHTML = `<div class="empty-state error-message"> No student data. Please upload a file first.</div>`;
-            dynamicFeedbackDiv.innerHTML = ' Upload student responses before applying answer key.';
+    function downloadResults(format){
+        if(!currentGrades.length){
+            alert('No graded results to download. Upload data and apply key first.');
             return;
         }
-        computeAndRenderFullReport();
-    });
-    resetDefaultKeyBtn.addEventListener('click', () => {
-        setDefaultKey();
-        if (studentsData.length > 0) computeAndRenderFullReport();
-        else renderEmptyState(false);
-    });
+        if(format === 'csv'){
+            let csvRows = [['Roll','Score','Total','Percentage','Details']];
+            currentGrades.forEach(g => {
+                const detailsStr = g.details.map(d=>`Q${d.qNo}:${d.studentAns}(${d.isCorrect?'✓':'✗'})`).join('|');
+                csvRows.push([g.roll, g.score, g.total, g.percentage+'%', detailsStr]);
+            });
+            const csvContent = csvRows.map(row => row.join(',')).join('\n');
+            const blob = new Blob(["\uFEFF" + csvContent], {type: 'text/csv;charset=utf-8;'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `mcq_results_${new Date().toISOString().slice(0,19)}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        } else if(format === 'json'){
+            const exportData = currentGrades.map(g => ({ roll: g.roll, score: g.score, total: g.total, percentage: g.percentage, per_question: g.details }));
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `mcq_results_${new Date().toISOString().slice(0,19)}.json`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+    }
 
-    // INIT: clean state with no dummy data, but ready for upload
-    function init() {
+    function escapeHtml(str){ return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+
+    function initAppState(){
         totalQuestions = 5;
         totalQuestionsInput.value = 5;
-        currentAnswerKey = ['A','B','C','D','A'];  // default for 5 Qs
-        rebuildAnswerKeyUI();
+        currentAnswerKey = ['A','B','C','D','A'];
         studentsData = [];
-        renderEmptyState(false);
-        updateLiveStats(0, null);
-        fileStatusSpan.innerHTML = ' Waiting for file upload...';
+        currentGrades = [];
+        rebuildAnswerKeyUI();
+        renderEmptyState();
+        fileStatusSpan.innerHTML = ' Ready for upload';
     }
-    init();
+
+    // Event binding
+    authSubmitBtn.addEventListener('click', handleAuth);
+    authSwitch.addEventListener('click', switchAuthMode);
+    logoutBtn.addEventListener('click', logout);
+    uploadBtnTrigger.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => { if(e.target.files.length) handleFile(e.target.files[0]); fileInput.value=''; });
+    resizeBtn.addEventListener('click', () => resizeQuestions(parseInt(totalQuestionsInput.value) || 5));
+    applyKeyBtn.addEventListener('click', () => { syncKeyFromUI(); if(studentsData.length) computeAndRenderFullReport(); else alert('Upload student data first.'); });
+    resetKeyBtn.addEventListener('click', setDefaultKey);
+    downloadCSVBtn.addEventListener('click', () => downloadResults('csv'));
+    downloadJSONBtn.addEventListener('click', () => downloadResults('json'));
+
+    // Check existing session
+    const savedUser = localStorage.getItem('mcq_current_user');
+    if(savedUser && loadUsers().find(u=>u.username===savedUser)){
+        currentUser = savedUser;
+        authModal.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+        currentUserSpan.innerText = currentUser;
+        initAppState();
+    } else {
+        authModal.classList.remove('hidden');
+        mainApp.classList.add('hidden');
+    }
 </script>
 </body>
 </html>
