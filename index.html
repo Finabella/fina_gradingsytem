@@ -38,7 +38,7 @@
 
             <!-- Format hints -->
             <div class="insight-card" style="background:#f9fbfe; margin-bottom:1rem;">
-                <div style="font-weight:600; font-size:0.8rem;">📌 Required Format</div>
+                <div style="font-weight:600; font-size:0.8rem;"> Required Format</div>
                 <div style="font-size:0.75rem; margin-top:6px;">
                     <strong>CSV:</strong> columns "roll" and "answers" (answers like "A,B,C,D" or "A;B;C")<br>
                     <strong>JSON:</strong> array of objects { "roll": "ID", "answers": ["A","B","C"] }
@@ -142,8 +142,8 @@
     }
 
     function updateKeyPreview() {
-        if (currentAnswerKey.length === 0) keyPreviewText.innerText = '🔑 No key defined';
-        else keyPreviewText.innerText = `🔑 Current Key: ${currentAnswerKey.map((k,i)=>`Q${i+1}:${k}`).join(' · ')}`;
+        if (currentAnswerKey.length === 0) keyPreviewText.innerText = ' No key defined';
+        else keyPreviewText.innerText = ` Current Key: ${currentAnswerKey.map((k,i)=>`Q${i+1}:${k}`).join(' · ')}`;
     }
 
     // default alternating key
@@ -310,7 +310,7 @@
     }
 
     function renderEmptyState(preserveKey = false) {
-        studentGradeContainer.innerHTML = `<div class="empty-state">📭 No student data. Please upload a CSV or JSON file with  student responses.</div>`;
+        studentGradeContainer.innerHTML = `<div class="empty-state"> No student data. Please upload a CSV or JSON file with  student responses.</div>`;
         summaryStatsDiv.innerHTML = '';
         if (!preserveKey) {
             dynamicFeedbackDiv.innerHTML = ' Upload a file with student answers, then configure the answer key and click "Apply Key & Grade".';
@@ -370,7 +370,7 @@
             computeAndRenderFullReport();
         } catch (err) {
             fileStatusSpan.innerHTML = ` Error: ${err.message}`;
-            studentGradeContainer.innerHTML = `<div class="empty-state error-message" style="background:#fee2e2;">⚠️ ${escapeHtml(err.message)}</div>`;
+            studentGradeContainer.innerHTML = `<div class="empty-state error-message" style="background:#fee2e2;"> ${escapeHtml(err.message)}</div>`;
             studentsData = [];
             renderEmptyState(false);
         }
@@ -408,7 +408,7 @@
     applyKeyBtn.addEventListener('click', () => {
         syncKeyFromUI();
         if (studentsData.length === 0) {
-            studentGradeContainer.innerHTML = `<div class="empty-state error-message">⚠️ No student data. Please upload a file first.</div>`;
+            studentGradeContainer.innerHTML = `<div class="empty-state error-message"> No student data. Please upload a file first.</div>`;
             dynamicFeedbackDiv.innerHTML = ' Upload student responses before applying answer key.';
             return;
         }
