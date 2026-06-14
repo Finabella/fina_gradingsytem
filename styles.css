@@ -81,10 +81,15 @@
             font-weight: 600;
         }
         .error-msg {
-            color: #dc2626;
-            font-size: 0.8rem;
-            margin: 0.3rem 0;
-        }
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin: 0.3rem 0;
+     }
+    .success-msg {
+    color: #10b981;
+    font-size: 0.8rem;
+    margin: 0.3rem 0;
+    }
 
         /* Header with user info */
         .header {
